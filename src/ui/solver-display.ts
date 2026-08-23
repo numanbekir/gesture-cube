@@ -9,8 +9,8 @@ function createBoxIcon(): SVGSVGElement {
   svg.style.flexShrink = "0";
   svg.style.display = "block";
   // same clamp as the move count so both read as one unit
-  svg.style.width = "clamp(28px, 5vw, 40px)";
-  svg.style.height = "clamp(28px, 5vw, 40px)";
+  svg.style.width = "2.5em";
+  svg.style.height = "2.5em";
   const group = svgEl("g", { fill: "none", stroke: COLOR_TEXT, "stroke-width": "1.4", "stroke-linejoin": "round" });
   group.appendChild(svgEl("path", { d: "M14 3 L23 8 L14 13 L5 8 Z" }));
   group.appendChild(svgEl("path", { d: "M5 8 L14 13 L14 24 L5 19 Z" }));
@@ -100,7 +100,7 @@ function createHelpStepRow(index: number, step: HintHelpStep, illustration: SVGS
   row.style.display = "grid";
   row.style.gridTemplateColumns = "auto minmax(0, 1fr)";
   row.style.alignItems = "center";
-  row.style.gap = "clamp(14px, 3.2vw, 20px)";
+  row.style.gap = "1.2em";
 
   const textCol = document.createElement("div");
   textCol.style.display = "flex";
@@ -146,9 +146,10 @@ function createHelpPanel(strings: GestureCubeStrings["solverDisplay"]["help"], o
   card.style.zIndex = "11"; // above panels (10)
   // deliberately larger than the guide cards
   card.style.width = "min(clamp(320px, 86vw, 440px), calc(100vw - 24px))";
-  card.style.gap = "clamp(16px, 3.4vw, 22px)";
-  card.style.padding = "clamp(18px, 4.2vw, 28px)";
+  card.style.gap = "1.3em";
+  card.style.padding = "1.5em";
   card.style.font = FONT_LARGE;
+  card.style.fontSize = "1.05em"; // container-derived (see applyScale), slightly larger
 
   const heading = document.createElement("div");
   const titleEl = document.createElement("div");
@@ -206,6 +207,15 @@ export function createSolverDisplay(container: HTMLElement, strings: GestureCube
   const wrapper = document.createElement("div");
   wrapper.style.position = "absolute";
   wrapper.style.top = "80px";
+  // The pill and its help panel are em-based; the root font follows the container width.
+  const applyScale = () => {
+    const w = container.clientWidth;
+    const size = `${Math.min(16, Math.max(12, w * 0.011))}px`;
+    wrapper.style.fontSize = size;
+    helpPanel.style.fontSize = size;
+  };
+  const scaleObserver = new ResizeObserver(applyScale);
+  scaleObserver.observe(container);
   wrapper.style.left = "50%";
   wrapper.style.transform = "translateX(-50%)";
   wrapper.style.zIndex = "10"; // above the play-screen overlay
@@ -218,9 +228,9 @@ export function createSolverDisplay(container: HTMLElement, strings: GestureCube
   const badge = document.createElement("div");
   badge.style.display = "flex";
   badge.style.alignItems = "center";
-  badge.style.gap = "14px";
+  badge.style.gap = "0.9em";
   // same glass tone as the guide cards
-  badge.style.padding = "11px 16px";
+  badge.style.padding = "0.7em 1em";
   badge.style.borderRadius = "999px";
   badge.style.background = GLASS_BG;
   badge.style.border = GLASS_BORDER;
@@ -228,6 +238,9 @@ export function createSolverDisplay(container: HTMLElement, strings: GestureCube
   badge.style.boxShadow = "0 10px 30px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.09)";
   badge.style.color = COLOR_TEXT;
   badge.style.font = FONT_BASE; // shorthand needs a size, see theme.ts
+  // ...but that size is viewport-based; reset it so the pill follows the container-derived
+  // size set on the wrapper (see applyScale).
+  badge.style.fontSize = "1em";
 
   const icon = createBoxIcon();
 
@@ -238,7 +251,7 @@ export function createSolverDisplay(container: HTMLElement, strings: GestureCube
   textCol.style.lineHeight = "1.1";
 
   const countEl = document.createElement("span");
-  countEl.style.fontSize = "clamp(28px, 5vw, 40px)";
+  countEl.style.fontSize = "2.5em";
   countEl.style.fontWeight = "700";
   countEl.style.fontVariantNumeric = "tabular-nums";
 
@@ -269,8 +282,8 @@ export function createSolverDisplay(container: HTMLElement, strings: GestureCube
   switchLabel.style.opacity = "0.85"; // clickable control, slightly stronger than HUD labels
 
   const track = document.createElement("div");
-  track.style.width = "32px";
-  track.style.height = "18px";
+  track.style.width = "2em";
+  track.style.height = "1.15em";
   track.style.borderRadius = "999px";
   track.style.background = "rgba(255,255,255,0.2)";
   track.style.position = "relative";
@@ -281,8 +294,8 @@ export function createSolverDisplay(container: HTMLElement, strings: GestureCube
   knob.style.position = "absolute";
   knob.style.top = "2px";
   knob.style.left = "2px";
-  knob.style.width = "14px";
-  knob.style.height = "14px";
+  knob.style.width = "0.85em";
+  knob.style.height = "0.85em";
   knob.style.borderRadius = "50%";
   knob.style.background = COLOR_TEXT;
   knob.style.transition = "transform 0.15s ease";
@@ -298,9 +311,9 @@ export function createSolverDisplay(container: HTMLElement, strings: GestureCube
   const helpButton = createCornerButton("?", strings.help.openAriaLabel, () => setHelpOpen(!helpOpen));
   helpButton.style.display = "flex";
   helpButton.style.position = "static";
-  helpButton.style.width = "26px";
-  helpButton.style.height = "26px";
-  helpButton.style.fontSize = "12px";
+  helpButton.style.width = "1.8em";
+  helpButton.style.height = "1.8em";
+  helpButton.style.fontSize = "0.72em";
   helpButton.style.flexShrink = "0";
   badge.appendChild(helpButton);
 
@@ -308,6 +321,7 @@ export function createSolverDisplay(container: HTMLElement, strings: GestureCube
   helpPanel.style.display = "none";
   helpPanel.style.opacity = "0";
   helpPanel.style.transition = "opacity 0.25s ease";
+  applyScale();
 
   wrapper.append(badge);
   container.append(wrapper, helpPanel);
@@ -342,7 +356,7 @@ export function createSolverDisplay(container: HTMLElement, strings: GestureCube
 
   function setHintActive(active: boolean) {
     track.style.background = active ? HINT_COLOR_CSS : "rgba(255,255,255,0.2)";
-    knob.style.transform = active ? "translateX(14px)" : "translateX(0)";
+    knob.style.transform = active ? "translateX(0.85em)" : "translateX(0)";
   }
 
   function setVisible(visible: boolean) {
@@ -351,6 +365,7 @@ export function createSolverDisplay(container: HTMLElement, strings: GestureCube
   }
 
   function remove() {
+    scaleObserver.disconnect();
     window.removeEventListener("keydown", onKeyDown);
     wrapper.remove();
     helpPanel.remove();

@@ -48,7 +48,7 @@ const MIDDLE_PANEL_MAX_PX = 480;
 const SIDE_OFFSET_MAX_PX = 225;
 const SIDE_OFFSET_MIN_PX = 16;
 // single gap value for every row item
-const ROW_GAP = "clamp(12px, 3vw, 18px)";
+const ROW_GAP = "1em"; // scales with the card font
 // slow fade so panels don't pop
 const FADE_TRANSITION = "opacity 0.8s ease";
 
@@ -210,8 +210,8 @@ function createMiniGrid(activeIndex: number, accentColor: string): HTMLElement {
   grid.style.display = "grid";
   grid.style.gridTemplateColumns = "repeat(2, 1fr)";
   grid.style.gap = "4px";
-  grid.style.width = "44px";
-  grid.style.height = "44px";
+  grid.style.width = "2.75em";
+  grid.style.height = "2.75em";
   grid.style.flexShrink = "0";
   for (let i = 0; i < 4; i++) {
     const cell = document.createElement("div");
@@ -288,7 +288,7 @@ function createPanelSection(side: "left" | "right", content: PanelContent): HTML
   subtitleEl.style.fontSize = "0.85em";
   subtitleEl.style.letterSpacing = "0.03em";
   const rule = document.createElement("div");
-  rule.style.width = "28px";
+  rule.style.width = "1.75em";
   rule.style.height = "2px";
   rule.style.background = content.accentColor;
   rule.style.opacity = "0.6";
@@ -366,7 +366,7 @@ function createMiddleContent(middle: { readonly title: string; readonly manualTi
   titleEl.style.letterSpacing = "0.02em";
 
   const rule = document.createElement("div");
-  rule.style.width = "28px";
+  rule.style.width = "1.75em";
   rule.style.height = "2px";
   // green → blue: both hands working together
   rule.style.background = `linear-gradient(90deg, ${GREEN}, ${BLUE})`;
@@ -404,16 +404,16 @@ function createLockIcon(): LockIconHandle {
   const wrap = document.createElement("div");
   wrap.style.position = "relative";
   // scaled with the hand icons
-  wrap.style.width = "26px";
-  wrap.style.height = "28px";
+  wrap.style.width = "1.6em";
+  wrap.style.height = "1.75em";
   wrap.style.flexShrink = "0";
 
   const shackle = document.createElement("div");
   shackle.style.position = "absolute";
   shackle.style.top = "0";
   shackle.style.left = "50%";
-  shackle.style.width = "14px";
-  shackle.style.height = "12px";
+  shackle.style.width = "0.9em";
+  shackle.style.height = "0.75em";
   shackle.style.borderRadius = "8px 8px 0 0";
   shackle.style.borderStyle = "solid";
   shackle.style.borderWidth = "3px";
@@ -428,8 +428,8 @@ function createLockIcon(): LockIconHandle {
   body.style.bottom = "0";
   body.style.left = "50%";
   body.style.transform = "translateX(-50%)";
-  body.style.width = "22px";
-  body.style.height = "15px";
+  body.style.width = "1.4em";
+  body.style.height = "0.95em";
   body.style.borderRadius = "3px";
   body.style.transition = "background 0.3s ease, box-shadow 0.3s ease";
 
@@ -470,8 +470,8 @@ function createHandStatusSection(accentColor: string, mirrored: boolean, label: 
   const iconBox = document.createElement("div");
   iconBox.style.position = "relative";
   // icon grown without increasing panel height; gaps reduced to compensate
-  iconBox.style.width = "44px";
-  iconBox.style.height = "44px";
+  iconBox.style.width = "2.75em";
+  iconBox.style.height = "2.75em";
   iconBox.style.flexShrink = "0";
   iconBox.style.transition = "filter 0.3s ease, opacity 0.3s ease";
 
@@ -682,8 +682,8 @@ function createMiddlePanel(
 
   const card = createCardElement();
   card.style.position = "relative"; // anchor for the corner button
-  card.style.padding = "clamp(16px, 3vw, 24px)";
-  card.style.fontSize = "clamp(14px, 3.4vw, 17px)"; // slightly larger than the side panels
+  card.style.padding = "1.2em";
+  card.style.fontSize = "1em"; // inherits the container-derived size set in applyLayout
   card.append(middleContent, statusContent, solvedContent, helpButton, closeButton);
   wrapper.appendChild(card);
   container.appendChild(wrapper);
@@ -889,6 +889,12 @@ export function createGestureGuide(
       if (room < sideW + SIDE_OFFSET_MIN_PX) return false;
     }
     const offset = clamp(Math.min(W * 0.17, room - sideW), SIDE_OFFSET_MIN_PX, SIDE_OFFSET_MAX_PX);
+    // Everything inside the cards is em-based; deriving the root font from the container
+    // width scales the whole guide with the box it lives in.
+    middle.style.fontSize = `${clamp(W * 0.0115, 13, 17)}px`;
+    const sideFont = `${clamp(W * 0.01, 12, 15)}px`;
+    left.style.fontSize = sideFont;
+    right.style.fontSize = sideFont;
     left.style.width = `${sideW}px`;
     right.style.width = `${sideW}px`;
     left.style.left = `${offset}px`;

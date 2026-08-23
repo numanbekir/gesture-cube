@@ -13,8 +13,9 @@ export function createCardElement(): HTMLElement {
   const card = document.createElement("div");
   card.style.display = "flex";
   card.style.flexDirection = "column";
-  card.style.gap = "clamp(14px, 3vw, 20px)";
-  card.style.padding = "clamp(14px, 3.4vw, 22px)";
+  // em: scales with the card font, which the owners derive from their container.
+  card.style.gap = "1em";
+  card.style.padding = "1.1em";
   card.style.borderRadius = "20px";
   card.style.background = GLASS_BG;
   card.style.border = GLASS_BORDER;
@@ -24,6 +25,9 @@ export function createCardElement(): HTMLElement {
   card.style.willChange = "opacity, backdrop-filter";
   card.style.color = COLOR_TEXT;
   card.style.font = FONT_BASE;
+  // The font shorthand above bakes in a viewport-based size; reset it so the card
+  // inherits from its owner, which derives the size from the container it lives in.
+  card.style.fontSize = "1em";
   card.style.boxSizing = "border-box";
   return card;
 }
@@ -37,13 +41,13 @@ export function createCornerButton(text: string, ariaLabel: string, onClick: () 
   button.style.position = "absolute";
   button.style.top = "10px";
   button.style.right = "10px";
-  button.style.width = "28px";
-  button.style.height = "28px";
+  button.style.width = "1.7em";
+  button.style.height = "1.7em";
   button.style.borderRadius = "50%";
   button.style.border = "1px solid rgba(255,255,255,0.14)";
   button.style.background = GLASS_BG_SOLID;
   button.style.color = COLOR_TEXT;
-  button.style.fontSize = "13px";
+  button.style.fontSize = "0.8em";
   button.style.fontWeight = "700";
   button.style.display = "none";
   button.style.alignItems = "center";
