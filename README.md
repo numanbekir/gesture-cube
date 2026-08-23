@@ -152,6 +152,7 @@ const instance = initGestureCube(container, {
   videoBackground: false,                  // the host already shows the <video> under the canvas
   autoLoad: true,                          // load the model right away; the player clicks once
   onEvent: (type) => track(type),          // "play_start" | "successful_detection" | "completion"
+  onStatus: (s) => panel.update(s),        // live session snapshot (phase, hands, delegate, ms, moves)
 });
 instance.setSpaciousLayout(isFullscreen);  // toggles the gesture guide
 instance.drawOverlay(ctx, dx, dy, dw, dh); // 3D layer for photo/video capture

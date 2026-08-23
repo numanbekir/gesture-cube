@@ -31,6 +31,19 @@ import type { GestureCubeStrings } from "./strings";
 
 export type GestureCubeEventType = "play_start" | "successful_detection" | "completion";
 
+// Live session snapshot for host UIs (side panels etc.), reported via onStatus.
+export interface GestureCubeStatus {
+  readonly phase: "idle" | "loadingModel" | "ready" | "playing";
+  // Hands currently visible to the tracker (0-2); null before tracking starts.
+  readonly handsVisible: number | null;
+  readonly delegate: HandDelegate | null;
+  // Smoothed per-frame inference time; null until the first samples arrive.
+  readonly inferenceMs: number | null;
+  // Minimum remaining moves from the solver; null before the scramble finishes.
+  readonly minMovesRemaining: number | null;
+  readonly solved: boolean;
+}
+
 export interface GestureCubeOptions {
   // The caller owns the camera and provides a ready <video>.
   readonly video: HTMLVideoElement;
@@ -41,6 +54,8 @@ export interface GestureCubeOptions {
   // unset the engine decides from the container height, see hasRoomForGuide().
   readonly spaciousLayout?: boolean;
   readonly onEvent?: (type: GestureCubeEventType) => void;
+  // Live status for host UIs; called on phase changes and at most ~2×/s while tracking.
+  readonly onStatus?: (status: GestureCubeStatus) => void;
   // Called synchronously on the first start click, inside the user gesture (e.g. to request
   // fullscreen). With autoLoad that is the single "ready" click.
   readonly onPlayClick?: () => void;
@@ -209,6 +224,32 @@ export function initGestureCube(container: HTMLElement, options: GestureCubeOpti
   // End of game: the cube is solved, layer moves are locked until restart. Free rotation
   // stays enabled so the solved cube can still be looked at.
   let solvedState = false;
+
+  // ---- onStatus reporting (host side panels). Cheap no-ops when the host passes none.
+  const STATUS_INTERVAL_MS = 500;
+  let currentDelegate: HandDelegate | null = null;
+  let handsVisible: number | null = null;
+  let statusInferenceMs: number | null = null; // exponential moving average
+  let lastStatusEmit = 0;
+  let lastStatusJson = "";
+  function reportStatus(throttled = false) {
+    if (!options.onStatus) return;
+    const now = performance.now();
+    if (throttled && now - lastStatusEmit < STATUS_INTERVAL_MS) return;
+    const status: GestureCubeStatus = {
+      phase: currentState.phase,
+      handsVisible,
+      delegate: currentDelegate,
+      inferenceMs: statusInferenceMs === null ? null : Math.round(statusInferenceMs * 10) / 10,
+      minMovesRemaining: scrambleCompleted ? currentSolution.length : null,
+      solved: solvedState,
+    };
+    const json = JSON.stringify(status);
+    if (json === lastStatusJson) return;
+    lastStatusJson = json;
+    lastStatusEmit = now;
+    options.onStatus(status);
+  }
   let userMoves = 0;
   let solveStartedAt = 0;
   let optimalAtStart = 0;
@@ -283,6 +324,7 @@ export function initGestureCube(container: HTMLElement, options: GestureCubeOpti
     // solve() speaks in the normalized frame; convert to the physical cube before use.
     currentSolution = solve(stateToCorners(cubeState)).map((m) => toPhysicalMove(cubeState, m));
     solverDisplay.setMinimumMoves(currentSolution.length);
+    reportStatus();
     if (inputLocked && executor.isIdle) {
       inputLocked = false;
       scrambleCompleted = true;
@@ -300,6 +342,7 @@ export function initGestureCube(container: HTMLElement, options: GestureCubeOpti
       gestureGuide.updateSolved({ moves: userMoves, timeMs: performance.now() - solveStartedAt, optimalMoves: optimalAtStart });
       updateGestureGuideVisibility();
       options.onEvent?.("completion");
+      reportStatus();
     }
   }
 
@@ -416,6 +459,7 @@ export function initGestureCube(container: HTMLElement, options: GestureCubeOpti
   function transition(next: AppState) {
     currentState = next;
     render();
+    reportStatus();
     if (next.phase === "playing") {
       options.onEvent?.("play_start");
       startTracking(next.landmarker);
@@ -429,6 +473,8 @@ export function initGestureCube(container: HTMLElement, options: GestureCubeOpti
       landmarker.close();
       return;
     }
+    currentDelegate = delegate;
+    reportStatus();
     perfStats?.setDelegate(delegate);
     perfStats?.setSource(video.videoWidth, video.videoHeight);
     closeLandmarker = () => landmarker.close();
@@ -464,7 +510,11 @@ export function initGestureCube(container: HTMLElement, options: GestureCubeOpti
       if (video.readyState >= 2) {
         const now = performance.now();
         const result = detectHands(landmarker, video, now);
-        perfStats?.addSample(performance.now() - now);
+        const sampleMs = performance.now() - now;
+        perfStats?.addSample(sampleMs);
+        statusInferenceMs = statusInferenceMs === null ? sampleMs : statusInferenceMs * 0.9 + sampleMs * 0.1;
+        handsVisible = result.landmarks.length;
+        reportStatus(true);
         drawLandmarks(overlay, result, mirrored);
         // face currently towards the camera, shared by the grab/release branches
         const preview = nearestSnapOrientation(cubeGroup.quaternion, cameraForward, cameraUp);
