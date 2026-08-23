@@ -40,8 +40,12 @@ export interface GestureCubeOptions {
   // Whether there is room for the gesture guide (true in standalone; platform toggles it on fullscreen).
   readonly spaciousLayout?: boolean;
   readonly onEvent?: (type: GestureCubeEventType) => void;
-  // Called synchronously on the start click, inside the user gesture (e.g. to request fullscreen).
+  // Called synchronously on the first start click, inside the user gesture (e.g. to request
+  // fullscreen). With autoLoad that is the single "ready" click.
   readonly onPlayClick?: () => void;
+  // Start loading the hand model immediately instead of waiting for the first click, so the
+  // player only clicks once (hosts where the user already pressed a "start" button).
+  readonly autoLoad?: boolean;
   // Fired when the video track ends; the instance cleans itself up, the caller handles reconnection.
   readonly onCameraEnded?: () => void;
   // Dev-only keyboard shortcuts (U/D/L/R/F/B, Shift = prime, 0 = reset). Off by default:
@@ -417,13 +421,21 @@ export function initGestureCube(container: HTMLElement, options: GestureCubeOpti
     transition({ phase: "ready", landmarker });
   }
 
+  let playClickFired = false;
+  function firePlayClick() {
+    if (playClickFired) return;
+    playClickFired = true;
+    options.onPlayClick?.(); // synchronously, inside the user gesture
+  }
+
   function handlePlayClick() {
     if (currentState.phase === "idle") {
-      options.onPlayClick?.(); // synchronously, inside the user gesture
+      firePlayClick();
       void prepareGame();
       return;
     }
     if (currentState.phase === "ready") {
+      firePlayClick();
       transition({ phase: "playing", landmarker: currentState.landmarker });
     }
   }
@@ -551,6 +563,7 @@ export function initGestureCube(container: HTMLElement, options: GestureCubeOpti
   videoTrack?.addEventListener("ended", handleCameraEnded);
 
   render();
+  if (options.autoLoad) void prepareGame();
 
   function destroy() {
     if (destroyed) return;
