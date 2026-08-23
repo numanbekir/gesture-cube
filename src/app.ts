@@ -6,7 +6,7 @@ import { createVideoBackground } from "./render/video-background";
 import { startAnimationLoop } from "./render/animation-loop";
 import { createSolvedState } from "./cube-engine/state";
 import { MoveExecutor } from "./move-executor";
-import { createHandLandmarker, detectHands, type HandDelegate } from "./hand-tracking/hand-landmarker";
+import { createHandLandmarker, detectHands, type HandAssetPaths, type HandDelegate } from "./hand-tracking/hand-landmarker";
 import { createPerfStats, type PerfStats } from "./ui/perf-stats";
 import { createOrientationGate } from "./ui/orientation-gate";
 import { createWatermark } from "./ui/watermark";
@@ -50,6 +50,9 @@ export interface GestureCubeOptions {
   // Preferred MediaPipe delegate. Default "GPU" with automatic CPU fallback; "CPU"
   // forces WASM inference (benchmarking, or hosts that want predictable behavior).
   readonly handDelegate?: HandDelegate;
+  // Where the MediaPipe WASM runtime and the hand model are served from. Defaults to
+  // the standalone layout (/mediapipe/wasm, /models/hand_landmarker.task).
+  readonly assetPaths?: HandAssetPaths;
   // Shows a small "delegate · ms · fps" readout. Dev/benchmark only.
   readonly perfStats?: boolean;
   // Bottom-right tanirim.com watermark. On by default (standalone); the platform
@@ -396,7 +399,7 @@ export function initGestureCube(container: HTMLElement, options: GestureCubeOpti
 
   async function prepareGame() {
     transition({ phase: "loadingModel" });
-    const { landmarker, delegate } = await createHandLandmarker(options.handDelegate ?? "GPU");
+    const { landmarker, delegate } = await createHandLandmarker(options.handDelegate ?? "GPU", options.assetPaths);
     if (destroyed) {
       landmarker.close();
       return;

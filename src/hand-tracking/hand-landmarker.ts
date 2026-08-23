@@ -1,9 +1,18 @@
 import { FilesetResolver, HandLandmarker, type HandLandmarkerResult } from "@mediapipe/tasks-vision";
 
-const WASM_BASE_PATH = "/mediapipe/wasm";
-const MODEL_PATH = "/models/hand_landmarker.task";
-
 export type HandDelegate = "GPU" | "CPU";
+
+// Where the host serves the MediaPipe runtime and the model. Standalone serves them from
+// the site root; an embedding host (the Tanırım platform) can mount them under a prefix.
+export interface HandAssetPaths {
+  readonly wasmBasePath: string;
+  readonly modelPath: string;
+}
+
+export const DEFAULT_HAND_ASSET_PATHS: HandAssetPaths = {
+  wasmBasePath: "/mediapipe/wasm",
+  modelPath: "/models/hand_landmarker.task",
+};
 
 export interface HandLandmarkerHandle {
   readonly landmarker: HandLandmarker;
@@ -13,11 +22,11 @@ export interface HandLandmarkerHandle {
 
 // All inference runs in the browser. GPU (WebGL) is preferred; CPU (WASM) is the
 // fallback when WebGL is unavailable, or can be forced for benchmarking.
-export async function createHandLandmarker(preferred: HandDelegate = "GPU"): Promise<HandLandmarkerHandle> {
-  const vision = await FilesetResolver.forVisionTasks(WASM_BASE_PATH);
+export async function createHandLandmarker(preferred: HandDelegate = "GPU", paths: HandAssetPaths = DEFAULT_HAND_ASSET_PATHS): Promise<HandLandmarkerHandle> {
+  const vision = await FilesetResolver.forVisionTasks(paths.wasmBasePath);
   const create = (delegate: HandDelegate) =>
     HandLandmarker.createFromOptions(vision, {
-      baseOptions: { modelAssetPath: MODEL_PATH, delegate },
+      baseOptions: { modelAssetPath: paths.modelPath, delegate },
       runningMode: "VIDEO",
       numHands: 2,
     });

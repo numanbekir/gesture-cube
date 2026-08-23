@@ -135,6 +135,31 @@ Open the address on the phone (same Wi-Fi) and accept the certificate warning.
 In `pnpm dev` only: `U D L R F B` apply a move (Shift = inverse), `0` resets the cube.
 Disabled in production builds; the product is gesture-driven.
 
+## Embedding in a host page
+
+The package entry (`src/index.ts`) exposes the same engine the standalone page uses. The
+host owns the camera and hands over a ready `<video>`:
+
+```ts
+import { initGestureCube, STRINGS_BY_LOCALE } from "gesture-cube";
+
+const instance = initGestureCube(container, {
+  video,                                   // a playing HTMLVideoElement
+  mirrored: facingMode === "user",
+  strings: STRINGS_BY_LOCALE.en,
+  assetPaths: { wasmBasePath: "/gesture-cube/wasm", modelPath: "/gesture-cube/hand_landmarker.task" },
+  watermark: false,                        // the host draws its own
+  onEvent: (type) => track(type),          // "play_start" | "successful_detection" | "completion"
+});
+instance.setSpaciousLayout(isFullscreen);  // toggles the gesture guide
+instance.drawOverlay(ctx, dx, dy, dw, dh); // 3D layer for photo/video capture
+instance.destroy();
+```
+
+The host serves the MediaPipe WASM runtime (from `@mediapipe/tasks-vision/wasm`) and
+`public/models/hand_landmarker.task` at the paths given in `assetPaths`. The entry is
+TypeScript source; bundlers that consume it must transpile the package.
+
 ## Known limits
 
 - **Phones: portrait only.** Landscape phones leave ~300 px of height, not enough for the

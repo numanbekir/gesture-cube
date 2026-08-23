@@ -5,6 +5,16 @@
   "description": "Solve a 2×2 Rubik's cube with hand gestures: browser-only hand tracking, AR rendering and an optimal solver.",
   "license": "SEE LICENSE IN LICENSE",
   "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "files": [
+    "src",
+    "public/models",
+    "scripts",
+    "LICENSE",
+    "README.md"
+  ],
   "engines": {
     "node": ">=20"
   },
