@@ -6,7 +6,8 @@
   "license": "SEE LICENSE IN LICENSE",
   "type": "module",
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./strings": "./src/strings.ts"
   },
   "files": [
     "src",

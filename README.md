@@ -157,6 +157,9 @@ instance.drawOverlay(ctx, dx, dy, dw, dh); // 3D layer for photo/video capture
 instance.destroy();
 ```
 
+`gesture-cube/strings` exposes only the UI strings and locale helpers (no MediaPipe or
+three.js imports), for hosts that build their dictionaries on the server.
+
 The host serves the MediaPipe WASM runtime (from `@mediapipe/tasks-vision/wasm`) and
 `public/models/hand_landmarker.task` at the paths given in `assetPaths`. The entry is
 TypeScript source; bundlers that consume it must transpile the package.
