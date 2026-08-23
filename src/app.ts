@@ -58,6 +58,9 @@ export interface GestureCubeOptions {
   // Bottom-right tanirim.com watermark. On by default (standalone); the platform
   // renders its own and passes false.
   readonly watermark?: boolean;
+  // Draw the camera feed as the scene background. On by default (standalone); a host
+  // that already shows the <video> under the canvas passes false for a transparent scene.
+  readonly videoBackground?: boolean;
 }
 
 export interface GestureCubeInstance {
@@ -118,7 +121,11 @@ export function initGestureCube(container: HTMLElement, options: GestureCubeOpti
 
   const sceneContext = createScene(container);
   const { scene, camera, renderer, controls, dispose: disposeScene } = sceneContext;
-  const videoBackground = createVideoBackground(scene, video, mirrored);
+  const videoBackground = options.videoBackground === false ? null : createVideoBackground(scene, video, mirrored);
+  if (!videoBackground) {
+    scene.background = null;
+    renderer.setClearColor(0x000000, 0);
+  }
   const cubeGroup = new THREE.Group();
   const CUBE_REST_POSITION = new THREE.Vector3(0, -1.5, 0);
   // Resting position while the start overlay is shown.
@@ -552,7 +559,7 @@ export function initGestureCube(container: HTMLElement, options: GestureCubeOpti
     window.removeEventListener("keydown", handleKeydown);
     if (trackingFrameId !== null) cancelAnimationFrame(trackingFrameId);
     stopAnimationLoop();
-    videoBackground.dispose();
+    videoBackground?.dispose();
     closeLandmarker?.();
     perfStats?.remove();
     orientationGate.remove();

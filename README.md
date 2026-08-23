@@ -149,6 +149,7 @@ const instance = initGestureCube(container, {
   strings: STRINGS_BY_LOCALE.en,
   assetPaths: { wasmBasePath: "/gesture-cube/wasm", modelPath: "/gesture-cube/hand_landmarker.task" },
   watermark: false,                        // the host draws its own
+  videoBackground: false,                  // the host already shows the <video> under the canvas
   onEvent: (type) => track(type),          // "play_start" | "successful_detection" | "completion"
 });
 instance.setSpaciousLayout(isFullscreen);  // toggles the gesture guide
