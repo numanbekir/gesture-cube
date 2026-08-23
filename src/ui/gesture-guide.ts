@@ -38,9 +38,15 @@ export interface GestureGuide {
 
 // Wide: two side panels + a middle panel. Narrow: one combined panel.
 const NARROW_LAYOUT_BREAKPOINT = 820;
-const PANEL_WIDTH_WIDE = "clamp(220px, 36vw, 320px)";
+// Wide-layout geometry is computed from the CONTAINER width in applyLayout (an embedding
+// host may give the engine a box much smaller than the viewport); these are the bounds.
+const SIDE_PANEL_MIN_PX = 220;
+const SIDE_PANEL_MAX_PX = 320;
+const MIDDLE_PANEL_MIN_PX = 340;
+const MIDDLE_PANEL_MAX_PX = 480;
 // larger side offset = closer to the center
-const PANEL_SIDE_OFFSET_WIDE = "clamp(120px, 17vw, 225px)";
+const SIDE_OFFSET_MAX_PX = 225;
+const SIDE_OFFSET_MIN_PX = 16;
 // single gap value for every row item
 const ROW_GAP = "clamp(12px, 3vw, 18px)";
 // slow fade so panels don't pop
@@ -622,8 +628,8 @@ function createPanel(container: HTMLElement, side: "left" | "right", content: Pa
   wrapper.style.position = "absolute";
   wrapper.style.top = "50%";
   wrapper.style.transform = "translateY(-50%)";
-  wrapper.style[side] = PANEL_SIDE_OFFSET_WIDE;
-  wrapper.style.width = PANEL_WIDTH_WIDE;
+  wrapper.style[side] = `${SIDE_OFFSET_MIN_PX}px`; // set by applyLayout
+  wrapper.style.width = `${SIDE_PANEL_MIN_PX}px`; // set by applyLayout
   wrapper.style.zIndex = "10"; // above the play-screen overlay
   wrapper.style.pointerEvents = "none";
   wrapper.style.boxSizing = "border-box";
@@ -665,7 +671,7 @@ function createMiddlePanel(
   wrapper.style.top = "0"; // set by applyLayout
   wrapper.style.left = "50%";
   wrapper.style.transform = "translateX(-50%)";
-  wrapper.style.width = "clamp(340px, 42vw, 480px)";
+  wrapper.style.width = `${MIDDLE_PANEL_MIN_PX}px`; // set by applyLayout
   wrapper.style.zIndex = "10";
   wrapper.style.pointerEvents = "none";
   wrapper.style.boxSizing = "border-box";
@@ -859,18 +865,57 @@ export function createGestureGuide(
   // the pill starts visible; kept in sync via setHintPanelVisible
   let hintPanelVisible = true;
 
+  // Minimum clearance between a side panel and the middle card in the wide layout.
+  const WIDE_LAYOUT_MIN_GAP = 24;
+
+  // Wide layout (side panels + middle card), sized from the container width: panels and
+  // card take their preferred share of the width, then the side offset shrinks toward
+  // the edges until everything clears. Returns false when even the minimum sizes do not
+  // fit (or the side panels are taller than the box); the combined layout is used then.
+  // Measured with the elements displayed; visibility is driven by opacity, no flash.
+  function applyWideGeometry(): boolean {
+    const W = container.clientWidth;
+    const H = container.clientHeight;
+    if (W < NARROW_LAYOUT_BREAKPOINT) return false;
+    const clamp = (v: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, v));
+    let sideW = clamp(W * 0.24, SIDE_PANEL_MIN_PX, SIDE_PANEL_MAX_PX);
+    let middleW = clamp(W * 0.36, MIDDLE_PANEL_MIN_PX, MIDDLE_PANEL_MAX_PX);
+    // room left for one side panel + its offset
+    let room = (W - middleW) / 2 - WIDE_LAYOUT_MIN_GAP;
+    if (room < sideW + SIDE_OFFSET_MIN_PX) {
+      sideW = SIDE_PANEL_MIN_PX;
+      middleW = MIDDLE_PANEL_MIN_PX;
+      room = (W - middleW) / 2 - WIDE_LAYOUT_MIN_GAP;
+      if (room < sideW + SIDE_OFFSET_MIN_PX) return false;
+    }
+    const offset = clamp(Math.min(W * 0.17, room - sideW), SIDE_OFFSET_MIN_PX, SIDE_OFFSET_MAX_PX);
+    left.style.width = `${sideW}px`;
+    right.style.width = `${sideW}px`;
+    left.style.left = `${offset}px`;
+    right.style.right = `${offset}px`;
+    middle.style.width = `${middleW}px`;
+    const previous = left.style.display;
+    left.style.display = "block";
+    const sideH = left.getBoundingClientRect().height;
+    left.style.display = previous;
+    return sideH <= H - 2 * COMBINED_PANEL_BOTTOM_GAP;
+  }
+
   function applyLayout() {
-    const narrow = container.clientWidth < NARROW_LAYOUT_BREAKPOINT;
+    const narrow = !applyWideGeometry();
     left.style.display = narrow ? "none" : "block";
     right.style.display = narrow ? "none" : "block";
     middle.style.display = narrow ? "none" : "block";
     combined.style.display = narrow ? "block" : "none";
     if (!narrow) {
       // align the middle panel's top with the side panel. getBoundingClientRect includes
-      // the translateY(-50%) transform; offsetTop does not.
+      // the translateY(-50%) transform; offsetTop does not. In short containers (an
+      // embedding host's 16:9 box) the centered side panels start above the hint pill, so
+      // never let the middle panel overlap it: keep it below the pill instead.
       const containerTop = container.getBoundingClientRect().top;
-      const leftTop = left.getBoundingClientRect().top;
-      middle.style.top = `${leftTop - containerTop}px`;
+      const leftTop = left.getBoundingClientRect().top - containerTop;
+      const pillBottom = (hintPanelVisible ? hintPanel.getBoundingClientRect().bottom : hintPanel.getBoundingClientRect().top) - containerTop;
+      middle.style.top = `${Math.max(leftTop, pillBottom + COMBINED_PANEL_TOP_GAP)}px`;
     } else {
       // narrow: anchor below the hint pill, measured each time (its height varies)
       const containerTop = container.getBoundingClientRect().top;

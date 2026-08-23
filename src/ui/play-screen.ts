@@ -27,9 +27,24 @@ export function createPlayScreen(container: HTMLElement, strings: GestureCubeStr
 
   const content = document.createElement("div");
   content.style.position = "absolute";
-  content.style.bottom = "min(10vh, 64px)"; // keeps the cube unobstructed
   content.style.left = "50%";
-  content.style.transform = "translateX(-50%)";
+  // Tall boxes: below the cube, keeping it unobstructed. Short boxes (an embedding
+  // host's 16:9 box on a phone) have no room under the cube: center the button instead.
+  const SHORT_CONTAINER_PX = 480;
+  function applyPlacement() {
+    if (container.clientHeight < SHORT_CONTAINER_PX) {
+      content.style.bottom = "auto";
+      content.style.top = "50%";
+      content.style.transform = "translate(-50%, -50%)";
+    } else {
+      content.style.top = "auto";
+      content.style.bottom = "min(10vh, 64px)";
+      content.style.transform = "translateX(-50%)";
+    }
+  }
+  applyPlacement();
+  const placementObserver = new ResizeObserver(applyPlacement);
+  placementObserver.observe(container);
   content.style.display = "flex";
   content.style.flexDirection = "column";
   content.style.alignItems = "center";
@@ -115,6 +130,7 @@ export function createPlayScreen(container: HTMLElement, strings: GestureCubeStr
   }
 
   function remove() {
+    placementObserver.disconnect();
     spinnerAnimation?.cancel();
     overlay.remove();
   }

@@ -3,7 +3,10 @@ import { svgEl } from "./primitives";
 import type { GestureCubeStrings } from "../strings";
 
 // Landscape phones leave ~300px of height, not enough for the cube plus the HUD. The gate
-// is driven by available height, not orientation, so landscape tablets are unaffected.
+// is driven by the viewport's height, not orientation, so landscape tablets are unaffected.
+// It measures the viewport (what "rotate your phone" can change), not the container: an
+// embedding host may render a small landscape box on a portrait phone and go fullscreen
+// only later.
 const MIN_HEIGHT_PX = 480;
 
 export interface OrientationGate {
@@ -56,16 +59,19 @@ export function createOrientationGate(container: HTMLElement, strings: GestureCu
   container.appendChild(overlay);
 
   function update() {
-    const { clientWidth: w, clientHeight: h } = container;
+    const w = window.innerWidth;
+    const h = window.innerHeight;
     overlay.style.display = h < MIN_HEIGHT_PX && w > h ? "flex" : "none";
   }
   const observer = new ResizeObserver(update);
   observer.observe(container);
+  window.addEventListener("resize", update);
   update();
 
   return {
     remove() {
       observer.disconnect();
+      window.removeEventListener("resize", update);
       overlay.remove();
     },
   };

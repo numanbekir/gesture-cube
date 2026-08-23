@@ -37,7 +37,8 @@ export interface GestureCubeOptions {
   // mirrored = facingMode === "user"; defaults to true (front camera).
   readonly mirrored?: boolean;
   readonly strings: GestureCubeStrings;
-  // Whether there is room for the gesture guide (true in standalone; platform toggles it on fullscreen).
+  // Force "there is room for the gesture guide" (standalone: always true). When false or
+  // unset the engine decides from the container height, see hasRoomForGuide().
   readonly spaciousLayout?: boolean;
   readonly onEvent?: (type: GestureCubeEventType) => void;
   // Called synchronously on the first start click, inside the user gesture (e.g. to request
@@ -144,8 +145,10 @@ export function initGestureCube(container: HTMLElement, options: GestureCubeOpti
   const hintOverlay = createHintOverlay(scene, cubeGroup, meshes);
 
   // Smaller cube on narrow screens. ResizeObserver for the same reason as in scene.ts.
+  // Room for the guide depends on the container height too (see hasRoomForGuide).
   const cubeScaleObserver = new ResizeObserver(() => {
     cubeGroup.scale.setScalar(container.clientWidth < MOBILE_BREAKPOINT ? MOBILE_CUBE_SCALE : 1);
+    updateGestureGuideVisibility();
   });
   cubeScaleObserver.observe(container);
 
@@ -188,6 +191,13 @@ export function initGestureCube(container: HTMLElement, options: GestureCubeOpti
   let hasScrambled = false; // scramble only once; a solved state before scrambling is not a completion
   // "Room for the guide" is the caller's signal; not the same as fullscreen.
   let hasSpaciousLayout = options.spaciousLayout ?? false;
+  // The auto guide (side panels + middle card) needs vertical room. Hosts that know they
+  // are full-viewport pass spaciousLayout; otherwise the container height decides, so a
+  // 16:9 box on a laptop still gets the guide while a short box only gets the "?" button.
+  const MIN_GUIDE_HEIGHT_PX = 480;
+  function hasRoomForGuide(): boolean {
+    return hasSpaciousLayout || container.clientHeight >= MIN_GUIDE_HEIGHT_PX;
+  }
   // Guide opened via "?"; stays open until "?" is pressed again.
   let guideManuallyOpen = false;
   // Hint help panel open → live HUD hidden.
@@ -206,7 +216,7 @@ export function initGestureCube(container: HTMLElement, options: GestureCubeOpti
   // The HUD and the pill are always visible except while the gesture guide is open.
   // The guide opens automatically after the scramble (until the first interaction) or manually via "?".
   function updateGestureGuideVisibility() {
-    const guideVisible = (hasSpaciousLayout && scrambleCompleted && !hasInteracted && !guideDismissed) || guideManuallyOpen;
+    const guideVisible = (hasRoomForGuide() && scrambleCompleted && !hasInteracted && !guideDismissed) || guideManuallyOpen;
     // the guide (auto or manual) and the hint help never overlap; closeHelp() re-enters
     // this function with hintHelpOpen=false, so return here and let that call finish
     if (guideVisible && hintHelpOpen) {
@@ -215,15 +225,19 @@ export function initGestureCube(container: HTMLElement, options: GestureCubeOpti
     }
     gestureGuide.setSideVisible(guideVisible);
     gestureGuide.setMiddleVisible(guideVisible);
-    gestureGuide.setHandStatusVisible(!guideVisible && !hintHelpOpen && !solvedState);
+    // The HUD and the pill only exist once the game is running; before that the box shows
+    // just the cube and the play screen.
+    const playing = currentState.phase === "playing";
+    gestureGuide.setHandStatusVisible(playing && !guideVisible && !hintHelpOpen && !solvedState);
     gestureGuide.setSolvedVisible(solvedState && !guideVisible && !hintHelpOpen);
     gestureGuide.setManualMode(guideManuallyOpen);
-    // "?" is only meaningful once the auto guide is gone.
-    gestureGuide.setHelpButtonVisible(currentState.phase === "playing" && (hasInteracted || guideDismissed));
-    // Pill hidden while the guide is open.
-    solverDisplay.setVisible(!guideVisible);
+    // "?" is only meaningful once the auto guide is gone, or when there was no room for it.
+    gestureGuide.setHelpButtonVisible(currentState.phase === "playing" && (hasInteracted || guideDismissed || !hasRoomForGuide()));
+    // Pill hidden while the guide or its own help panel is open.
+    const pillVisible = playing && !guideVisible && !hintHelpOpen;
+    solverDisplay.setVisible(pillVisible);
     // Opacity changes are invisible to the guide's ResizeObserver; report them explicitly.
-    gestureGuide.setHintPanelVisible(!guideVisible);
+    gestureGuide.setHintPanelVisible(pillVisible);
   }
   // Gesture input disabled during the entry animation and scramble; cleared in onCubeStateChange.
   let inputLocked = true;
