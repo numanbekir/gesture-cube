@@ -1,0 +1,21 @@
+# Dependencies and build output
+node_modules
+dist
+
+# Local env (keep .env.example)
+.env
+.env.*
+!.env.example
+
+# Local dev TLS certificates (mkcert), see README "Testing on a phone"
+certs/
+
+# MediaPipe WASM runtime, copied from node_modules on postinstall (scripts/copy-mediapipe.mjs)
+public/mediapipe/
+
+# Logs and editor files
+*.log
+.DS_Store
+.idea
+.vscode
+*.sw?

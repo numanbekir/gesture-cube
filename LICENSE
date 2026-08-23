@@ -1,0 +1,18 @@
+Copyright (c) 2026 Tanırım. All rights reserved.
+
+This source code is published for learning purposes only, as part of the Tanırım
+platform (https://tanirim.com).
+
+You may view the code and run it locally for personal, non-commercial evaluation.
+
+You may not, without prior written permission from the copyright holder:
+- copy, modify, or create derivative works of this code;
+- redistribute it, in source or binary form, in whole or in part;
+- use it, or any part of it, in a commercial product or service;
+- use it to train machine-learning models.
+
+Third-party components (MediaPipe, three.js and other dependencies listed in
+package.json) are licensed under their own terms, which are not affected by this notice.
+
+The software is provided as is, without warranty. The copyright holder is not liable
+for any damages that may arise from its use.

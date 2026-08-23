@@ -1,0 +1,35 @@
+{
+  "name": "gesture-cube",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Solve a 2×2 Rubik's cube with hand gestures: browser-only hand tracking, AR rendering and an optimal solver.",
+  "license": "SEE LICENSE IN LICENSE",
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "postinstall": "node scripts/copy-mediapipe.mjs",
+    "dev": "vite",
+    "dev:https": "vite --mode https",
+    "build": "tsc && vite build",
+    "preview": "vite preview",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint src"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@types/three": "^0.185.4",
+    "eslint": "^10.9.0",
+    "typescript": "~6.0.2",
+    "typescript-eslint": "^8.67.0",
+    "vite": "^8.2.0",
+    "vitest": "^4.1.10"
+  },
+  "dependencies": {
+    "@mediapipe/tasks-vision": "^1.0.1",
+    "three": "^0.185.1"
+  },
+  "packageManager": "pnpm@10.28.2"
+}
