@@ -1,6 +1,6 @@
 {
   "name": "gesture-cube",
-  "version": "0.1.0",
+  "version": "0.1.7",
   "private": true,
   "description": "Solve a 2×2 Rubik's cube with hand gestures: browser-only hand tracking, AR rendering and an optimal solver.",
   "license": "SEE LICENSE IN LICENSE",
