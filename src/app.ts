@@ -655,6 +655,9 @@ export function initGestureCube(container: HTMLElement, options: GestureCubeOpti
     renderer.setClearColor(0x000000, 0);
     renderer.render(scene, camera); // synchronous: the buffer is valid for drawImage right after
     ctx.drawImage(renderer.domElement, dx, dy, dw, dh);
+    // The hand skeleton is already drawn each frame onto its own 2D canvas; copying it in
+    // puts the player's tracked hands into captures at zero extra cost.
+    if (overlay.width > 0 && overlay.height > 0) ctx.drawImage(overlay, dx, dy, dw, dh);
     scene.background = background;
   }
 
