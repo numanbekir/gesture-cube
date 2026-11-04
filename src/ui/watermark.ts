@@ -1,9 +1,8 @@
 import { svgEl } from "./primitives";
 import { FONT_SANS } from "./theme";
 
-// Same mark and layout as the platform's WatermarkLogo: 64 px viewfinder mark, 12 px
-// "tanirim.com" label, bottom-right, 80 % opacity. Standalone only — the platform's
-// CameraStage renders its own.
+// 64 px viewfinder mark and 12 px "tanirim.com" label, bottom-right, 80 % opacity.
+// Standalone only; an embedding host can render its own.
 let instanceCounter = 0;
 
 export function createWatermark(container: HTMLElement): () => void {

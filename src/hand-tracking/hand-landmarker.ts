@@ -3,7 +3,7 @@ import { FilesetResolver, HandLandmarker, type HandLandmarkerResult } from "@med
 export type HandDelegate = "GPU" | "CPU";
 
 // Where the host serves the MediaPipe runtime and the model. Standalone serves them from
-// the site root; an embedding host (the Tanırım platform) can mount them under a prefix.
+// the site root; an embedding host can mount them under a prefix.
 export interface HandAssetPaths {
   readonly wasmBasePath: string;
   readonly modelPath: string;

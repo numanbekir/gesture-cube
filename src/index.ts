@@ -1,4 +1,4 @@
-// Public entry for embedding hosts (the Tanırım platform). Standalone mode uses main.ts.
+// Public entry for embedding hosts. Standalone mode uses main.ts.
 export { initGestureCube } from "./app";
 export type { GestureCubeOptions, GestureCubeInstance, GestureCubeEventType, GestureCubeStatus } from "./app";
 export type { HandDelegate, HandAssetPaths } from "./hand-tracking/hand-landmarker";

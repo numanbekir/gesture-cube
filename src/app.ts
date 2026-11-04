@@ -75,8 +75,8 @@ export interface GestureCubeOptions {
   readonly assetPaths?: HandAssetPaths;
   // Shows a small "delegate · ms · fps" readout. Dev/benchmark only.
   readonly perfStats?: boolean;
-  // Bottom-right tanirim.com watermark. On by default (standalone); the platform
-  // renders its own and passes false.
+  // Bottom-right tanirim.com watermark. On by default (standalone); a host that
+  // renders its own passes false.
   readonly watermark?: boolean;
   // Draw the camera feed as the scene background. On by default (standalone); a host
   // that already shows the <video> under the canvas passes false for a transparent scene.

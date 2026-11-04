@@ -1,6 +1,8 @@
 # Gesture Cube
 
-[![CI](https://github.com/tanirim/gesture-cube/actions/workflows/ci.yml/badge.svg)](https://github.com/tanirim/gesture-cube/actions/workflows/ci.yml)
+[![CI](https://github.com/numanbekir/gesture-cube/actions/workflows/ci.yml/badge.svg)](https://github.com/numanbekir/gesture-cube/actions/workflows/ci.yml)
+
+English · [Türkçe](README.tr.md)
 
 Solve a 2×2 Rubik's cube in your browser using only hand gestures. The cube is rendered
 in AR over your webcam feed; your hands are tracked in real time, and an optimal solver
@@ -8,9 +10,6 @@ shows you the next move directly on the cube.
 
 Everything (hand tracking, 3D rendering, the solver) runs **inside the browser**.
 No video ever leaves the device and there is no inference server.
-
-> Part of the [Tanırım](https://tanirim.com) computer-vision platform. This repository is
-> the standalone, self-contained version of the module.
 
 ## How it plays
 
